@@ -1,25 +1,25 @@
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
-import os
-from dotenv import load_dotenv
+import json
 import google.generativeai as genai
 
-# -------------------- SETUP --------------------
-st.set_page_config(page_title="SkillForge AI – Intelligent Career Path Builder", page_icon="🧠", layout="centered")
+# ------------------ FIREBASE + GEMINI SETUP ------------------
 
-load_dotenv()
-FIREBASE_CONFIG_PATH = os.getenv("FIREBASE_CONFIG_PATH", "firebase_config.json")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Load Firebase config and Gemini key securely from Streamlit Secrets
+firebase_config = json.loads(st.secrets["FIREBASE_CONFIG"])
+gemini_api_key = st.secrets["GEMINI_API_KEY"]
 
-# Initialize Firebase
+# Initialize Firebase only once
 if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_CONFIG_PATH)
+    cred = credentials.Certificate(firebase_config)
     firebase_admin.initialize_app(cred)
+
 db = firestore.client()
 
+
 # Initialize Gemini
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=gemini_api_key)
 MODEL = "models/gemini-2.5-flash"
 
 st.markdown("""
