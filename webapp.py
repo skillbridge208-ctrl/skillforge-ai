@@ -4,6 +4,13 @@ from firebase_admin import credentials, firestore
 import json
 import google.generativeai as genai
 
+st.set_page_config(
+    page_title="SkillForge AI",
+    page_icon="🧠",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # ------------------ FIREBASE + GEMINI SETUP ------------------
 
 # Load Firebase config and Gemini key securely from Streamlit Secrets
