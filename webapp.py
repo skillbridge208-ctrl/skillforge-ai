@@ -4,7 +4,6 @@ from firebase_admin import credentials, firestore
 import json
 import google.generativeai as genai
 
-# ------------------ PAGE CONFIG ------------------
 st.set_page_config(
     page_title="SkillForge AI",
     page_icon="🧠",
@@ -12,59 +11,65 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ------------------ CUSTOM STYLING ------------------
+# ------------------ STYLING ------------------
 st.markdown("""
-    <style>
-    /* App background */
-    .stApp {
-        background-color: #008080;  /* Teal */
-        color: #000000;
-        font-family: 'Inter', sans-serif;
-    }
+<style>
+/* Main container styling */
+.stApp {
+    background-color: #f8faf8;
+}
 
-    /* Main title */
-    .main-title {
-        text-align: center;
-        font-size: 2em;
-        color: #ffffff;
-        margin-bottom: 20px;
-        font-weight: bold;
-    }
+/* Main title */
+.main-title {
+    text-align: center;
+    font-size: 2em;
+    color: #065f46;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
 
-    /* Card style for profile and roadmap boxes */
-    .card {
-        background-color: #ffffff;  /* white cards */
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        color: #000000;
-        margin-bottom: 20px;
-    }
+/* Card style for data boxes */
+.profile-box {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background-color: #ffffff;
+    box-shadow: 0px 1px 6px rgba(0,0,0,0.08);
+}
 
-    /* Buttons */
-    div.stButton > button {
-        background-color: #800000 !important;  /* maroon */
-        color: white !important;
-        border-radius: 10px !important;
-        border: none !important;
-        padding: 10px 20px !important;
-        font-weight: 500 !important;
-    }
+/* Titles */
+.profile-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #800000; /* maroon */
+}
 
-    div.stButton > button:hover {
-        background-color: #a52a2a !important;
-    }
+/* Labels and values */
+.profile-label {
+    font-weight: 500;
+    color: #333;
+}
 
-    /* Input fields */
-    input, textarea {
-        color: #000 !important;
-    }
+.profile-value {
+    color: #555;
+}
 
-    /* Ensure text inside cards is visible */
-    .card p, .card li {
-        color: #000000;
-    }
-    </style>
+/* Buttons */
+div.stButton > button {
+    background-color: #800000 !important;
+    color: white !important;
+    border-radius: 10px !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    font-weight: 500 !important;
+}
+
+div.stButton > button:hover {
+    background-color: #a52a2a !important;
+}
+</style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 class='main-title'>🧠 SkillForge AI – Intelligent Career Path Builder</h1>", unsafe_allow_html=True)
@@ -81,7 +86,7 @@ db = firestore.client()
 genai.configure(api_key=gemini_api_key)
 MODEL = "models/gemini-2.5-flash"
 
-# ------------------ FIREBASE HELPERS ------------------
+# ------------------ HELPER FUNCTIONS ------------------
 def save_profile_to_db(profile):
     doc_ref = db.collection("users").document(profile["name"])
     doc_ref.set(profile)
@@ -97,25 +102,24 @@ def load_profile_from_db(name):
         st.error("❌ Profile not found.")
         return None
 
-# ------------------ GENERATE ROADMAP ------------------
 def generate_roadmap(profile):
     prompt = f"""
-    You are an AI career mentor. Create a clear, step-by-step learning roadmap 
-    for this user based on their details:
+You are an AI career mentor. Create a clear, step-by-step learning roadmap 
+for this user based on their details:
 
-    Name: {profile['name']}
-    Current Role: {profile['current_role']}
-    Existing Skills: {', '.join(profile['skills'])}
-    Career Goal: {profile['goal']}
+Name: {profile['name']}
+Current Role: {profile['current_role']}
+Existing Skills: {', '.join(profile['skills'])}
+Career Goal: {profile['goal']}
 
-    Provide:
-    - Learning stages (Beginner, Intermediate, Advanced)
-    - Specific skill recommendations
-    - Suggested courses or certifications
-    - Final project ideas
+Provide:
+- Learning stages (Beginner, Intermediate, Advanced)
+- Specific skill recommendations
+- Suggested courses or certifications
+- Final project ideas
 
-    Format neatly with bullet points.
-    """
+Format neatly with bullet points.
+"""
     try:
         model = genai.GenerativeModel(MODEL)
         response = model.generate_content(prompt)
@@ -124,17 +128,14 @@ def generate_roadmap(profile):
         st.error(f"⚠️ Error generating roadmap: {e}")
         return None
 
-# ------------------ DISPLAY PROFILE CARD ------------------
 def show_profile_card(profile):
-    st.markdown(f"""
-        <div class="card">
-            <p><strong>Name:</strong> {profile.get("name","")}</p>
-            <p><strong>Current Role:</strong> {profile.get("current_role","")}</p>
-            <p><strong>Skills:</strong> {', '.join(profile.get("skills",[]))}</p>
-            <p><strong>Completed:</strong> {', '.join(profile.get("completed",[]))}</p>
-            <p><strong>Goal:</strong> {profile.get("goal","")}</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div class='profile-box'>", unsafe_allow_html=True)
+    st.markdown(f"<div class='profile-title'>👤 Name</div><div class='profile-value'>{profile.get('name','')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='profile-title'>💼 Current Role</div><div class='profile-value'>{profile.get('current_role','')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='profile-title'>🧠 Skills</div><div class='profile-value'>{', '.join(profile.get('skills',[]))}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='profile-title'>🎯 Career Goal</div><div class='profile-value'>{profile.get('goal','')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='profile-title'>✅ Completed Skills</div><div class='profile-value'>{', '.join(profile.get('completed',[]))}</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------ APP LOGIC ------------------
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -147,14 +148,14 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 
 profile = st.session_state.get("profile", None)
 
-# --- Tab 1: Create Profile ---
+# ----- CREATE PROFILE -----
 with tab1:
     st.markdown("### Create New Profile")
     with st.form("create_profile_form"):
-        name = st.text_input("👤 Name")
-        current_role = st.text_input("💼 Current Role")
-        skills = st.text_input("🧠 Skills (comma separated)")
-        goal = st.text_area("🎯 Career Goal")
+        name = st.text_input("👤 Name", key="create_name")
+        current_role = st.text_input("💼 Current Role", key="create_role")
+        skills = st.text_input("🧠 Skills (comma separated)", key="create_skills")
+        goal = st.text_area("🎯 Career Goal", key="create_goal")
         submitted = st.form_submit_button("Save Profile")
 
         if submitted:
@@ -171,44 +172,45 @@ with tab1:
             else:
                 st.warning("Please fill in all required fields.")
 
-# --- Tab 2: Load Profile ---
+# ----- LOAD PROFILE -----
 with tab2:
     st.markdown("### Load Existing Profile")
-    name = st.text_input("Enter your name to load profile", key="load_name")
-    if st.button("Load Profile"):
-        loaded = load_profile_from_db(name)
+    load_name = st.text_input("Enter your name to load profile", key="load_name")
+    if st.button("Load Profile", key="load_btn"):
+        loaded = load_profile_from_db(load_name)
         if loaded:
-            st.session_state["profile"] = loaded
             profile = loaded
-            show_profile_card(profile)
+            st.session_state["profile"] = profile
+            show_profile_card(profile)  # ✅ Styled display
 
-# --- Tab 3: Generate Roadmap ---
+# ----- GENERATE ROADMAP -----
 with tab3:
     st.markdown("### Generate Personalized Roadmap")
     if profile:
-        if st.button("Generate Roadmap 🚀"):
+        if st.button("Generate Roadmap 🚀", key="gen_roadmap_btn"):
             with st.spinner("⏳ Generating your personalized roadmap... please wait."):
                 roadmap = generate_roadmap(profile)
                 if roadmap:
                     st.success("✅ Roadmap generated successfully!")
-                    st.markdown(f'<div class="card"><pre>{roadmap}</pre></div>', unsafe_allow_html=True)
+                    st.markdown("### 📘 Your Career Roadmap:")
+                    st.markdown(roadmap)
     else:
         st.info("Load or create a profile first.")
 
-# --- Tab 4: View Profile ---
+# ----- VIEW PROFILE -----
 with tab4:
     st.markdown("### View Profile Details")
     if profile:
-        show_profile_card(profile)
+        show_profile_card(profile)  # ✅ Styled display
     else:
         st.info("No profile loaded yet.")
 
-# --- Tab 5: Mark Completed ---
+# ----- MARK COMPLETED -----
 with tab5:
     st.markdown("### Mark Skill as Completed")
     if profile:
-        skill = st.text_input("Enter skill to mark completed", key="completed_skill")
-        if st.button("Mark Completed"):
+        skill = st.text_input("Enter skill to mark completed", key="mark_skill")
+        if st.button("Mark Completed", key="mark_btn"):
             if skill:
                 profile.setdefault("completed", []).append(skill)
                 save_profile_to_db(profile)
